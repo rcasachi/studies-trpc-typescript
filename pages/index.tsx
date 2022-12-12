@@ -1,8 +1,33 @@
 import Head from 'next/head'
 import Image from 'next/image'
+import React, { useState } from 'react'
+
 import styles from '../styles/Home.module.css'
+import { trpc } from '../utils/trpc'
 
 export default function Home() {
+  const [type, setType] = useState('')
+  const [content, setContent] = useState('')
+
+  const { mutateAsync: createFeedback } = trpc.createFeedback.useMutation();
+
+  const { data } = trpc.hello.useQuery({
+    text: 'Rafa'
+  });
+
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    try {
+      await createFeedback({
+        type,
+        content,
+      });
+    } catch (e) {
+      alert('errooooooor')
+    }
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,13 +38,27 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Welcome to <a href="https://nextjs.org">Next.js! </a>
+          Feedbacks: {data?.countFeedbacks}
         </h1>
 
         <p className={styles.description}>
-          Get started by editing{' '}
+          {data?.greeting}, get started by editing{' '}
           <code className={styles.code}>pages/index.tsx</code>
         </p>
+
+
+        <div>
+          <input name="type" value={type} onChange={(e) => setType(e.target.value)} />
+          <textarea name="content" value={content} onChange={(e) => setContent(e.target.value)}></textarea>
+          <button type="submit" onClick={(e) => handleSubmit(e)}>Enviar Feedback</button>
+        </div>
+
+        <ol>
+          {data?.feedbacks.map(({id, type, content, createdAt}) => (
+            <li key={id}>{`${id} - ${type}: ${content} (${createdAt})`}</li>
+          ))}
+        </ol>
 
         <div className={styles.grid}>
           <a href="https://nextjs.org/docs" className={styles.card}>
